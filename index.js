@@ -40,8 +40,8 @@ server.get('/api/users/:id', (req, res) => {
 
 // Add a new user
 server.post('/api/users', (req, res) => {
-  const userData = req.body;
-  
+	const userData = req.body;
+
 	User.insert(userData)
 		.then(data => {
 			if (userData.name && userData.bio) {
@@ -80,29 +80,28 @@ server.delete('/api/users/:id', (req, res) => {
 // Update a user
 server.put('/api/users/:id', (req, res) => {
 	const { id } = req.params;
-  const { userData } = req;
-  
-	User.update(id, userData)
-		.then(data => {
-			if (data) {
-				if (userData.name && userData.bio) {
+	const { name, bio} = req.body;
+	if (!name || !bio) {
+		res.status(400).json({
+			errorMessage: 'Please provide name and bio for the user.'
+		});
+	} else {
+		User.update(id, {name, bio})
+			.then(data => {
+				if (data) {
 					res.status(200).json(data);
 				} else {
-					res.status(400).json({
-						errorMessage: 'Please provide name and bio for the user.'
+					res.status(404).json({
+						message: 'The user with the specified ID does not exist.'
 					});
 				}
-			} else {
+			})
+			.catch(error => {
 				res
-					.status(404)
-					.json({ message: 'The user with the specified ID does not exist.' });
-			}
-		})
-		.catch(error => {
-			res
-				.status(500)
-				.json({ error: 'The user information could not be modified.' });
-		});
+					.status(500)
+					.json({ error: 'The user information could not be modified.' });
+			});
+	}
 });
 
 server.listen(3000, () => {
